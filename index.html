@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
   <head>
@@ -41,5 +42,7 @@
 </head>
   <body class="bg-gray-50 text-gray-900 antialiased selection:bg-stone-200 selection:text-stone-900">
     <div id="root"></div>
+    <!-- 明确添加入口脚本，解决 Vercel 部署后的加载问题 -->
+    <script type="module" src="./index.tsx"></script>
   </body>
 </html>

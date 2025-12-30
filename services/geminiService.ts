@@ -1,7 +1,17 @@
+
 import { GoogleGenAI } from "@google/genai";
 
+const getApiKey = () => {
+  try {
+    // 使用 typeof 检查 process，防止在浏览器环境下报错
+    return typeof process !== 'undefined' ? process.env.API_KEY : null;
+  } catch (e) {
+    return null;
+  }
+};
+
 const getClient = () => {
-  const apiKey = process.env.API_KEY;
+  const apiKey = getApiKey();
   if (!apiKey) {
     console.warn("API Key not found. AI features will be disabled.");
     return null;
@@ -11,7 +21,7 @@ const getClient = () => {
 
 export const polishText = async (text: string): Promise<string> => {
   const client = getClient();
-  if (!client) throw new Error("API Key missing");
+  if (!client) throw new Error("API Key missing. Please set API_KEY environment variable.");
 
   try {
     const response = await client.models.generateContent({
@@ -38,7 +48,7 @@ export const polishText = async (text: string): Promise<string> => {
 
 export const summarizeToTitle = async (text: string): Promise<string> => {
   const client = getClient();
-  if (!client) return "未命名笔记";
+  if (!client) return "随笔";
 
   try {
     const response = await client.models.generateContent({
