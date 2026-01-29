@@ -18,7 +18,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@300;400;500&family=Noto+Serif+SC:wght@300;400;600&family=Zhi+Mang+Xing&display=swap" rel="stylesheet">
     <style>
-      /* Custom scrollbar for a cleaner look */
+      /* 显式定义字体类，防止 html-to-image 截图时丢失 */
+      .font-serif-sc { font-family: 'Noto Serif SC', serif !important; }
+      .font-sans-sc { font-family: 'Noto Sans SC', sans-serif !important; }
+      .font-handwritten-sc { font-family: 'Ma Shan Zheng', cursive !important; }
+      .font-calligraphy-sc { font-family: 'Zhi Mang Xing', cursive !important; }
+
+      /* Custom scrollbar */
       ::-webkit-scrollbar {
         width: 6px;
         height: 6px;
@@ -40,6 +46,7 @@
         overflow: hidden;
         width: 100%;
         height: 100%;
+        background-color: #f5f5f4;
       }
       #root {
         height: 100%;

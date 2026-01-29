@@ -35,15 +35,28 @@ const App: React.FC = () => {
 
   const handleDownload = useCallback(async () => {
     if (!cardRef.current) return;
+    
+    // 简单的长度校验，防止极端情况
+    if (content.length > 5000) {
+      if (!confirm('内容过长可能会导致生成失败，是否继续？')) return;
+    }
+
     setIsDownloading(true);
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 350));
+      // 增加延迟确保 UI 完全静止
+      await new Promise(resolve => setTimeout(resolve, 600));
       
+      // 优化截图参数以减少内存占用
       const dataUrl = await toPng(cardRef.current, { 
-        pixelRatio: 2.5,
+        pixelRatio: 2.0, // 从 2.5 降至 2.0，大幅减少内存压力
         cacheBust: true,
         skipFonts: false,
+        // 过滤掉背景噪声层，因为 SVG 滤镜在截图时非常吃内存且容易崩溃
+        filter: (node) => {
+          const classList = (node as HTMLElement).classList;
+          return !classList?.contains('pointer-events-none') || !classList?.contains('opacity-[0.03]');
+        }
       });
       
       const link = document.createElement('a');
@@ -56,12 +69,12 @@ const App: React.FC = () => {
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (err) {
-      console.error('Could not generate image', err);
-      alert('图片生成失败，请重试。');
+      console.error('Image generation failed:', err);
+      alert('生成图片失败。原因可能是内容过长或设备内存不足，请尝试缩短内容或刷新页面。');
     } finally {
       setIsDownloading(false);
     }
-  }, []);
+  }, [content]);
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row font-sans bg-stone-100 overflow-hidden select-none">
@@ -111,7 +124,7 @@ const App: React.FC = () => {
       </div>
 
       {/* Right Side: Live Preview */}
-      <div className={`w-full md:w-1/2 lg:w-7/12 bg-[#d6d6d6] ${activeTab === 'edit' ? 'hidden md:flex' : 'flex'} min-h-[calc(100vh-100px)] md:min-h-screen p-4 md:p-12 flex-col items-center justify-start md:justify-center relative overflow-y-auto pb-40 md:pb-12`}>
+      <div className={`w-full md:w-1/2 lg:w-7/12 bg-[#d6d6d6] ${activeTab === 'edit' ? 'hidden md:flex' : 'flex'} min-h-[calc(100vh-100px)] md:min-h-screen p-4 md:p-12 flex-col items-center justify-start md:justify-center relative overflow-y-auto pb-48 md:pb-12`}>
         <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
 
         <div className="relative w-full max-w-[420px] flex flex-col gap-6 z-0">
@@ -143,12 +156,12 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Mobile Floating Action Bar - 彻底重构布局解决遮挡和挤压 */}
-      <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-[400px]">
-        <div className="flex items-center gap-3 px-4 py-3 bg-gray-900 rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.3)] border border-gray-800">
+      {/* Mobile Floating Action Bar */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex flex-col items-center pointer-events-none pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+        <div className="flex items-center gap-3 px-4 py-2.5 bg-gray-900/95 backdrop-blur-lg rounded-full shadow-xl border border-white/10 w-[92%] max-w-[400px] pointer-events-auto">
           <button 
             onClick={() => {setContent(''); setTitle(''); setActiveTab('edit')}}
-            className="flex-shrink-0 w-11 h-11 flex items-center justify-center bg-gray-800 text-gray-300 rounded-full active:bg-gray-700 transition-colors"
+            className="flex-shrink-0 w-11 h-11 flex items-center justify-center bg-white/10 text-white rounded-full active:bg-white/20 transition-colors"
           >
             <Eraser className="w-5 h-5" />
           </button>
@@ -156,25 +169,25 @@ const App: React.FC = () => {
           <button 
             onClick={handleDownload}
             disabled={isDownloading || !content}
-            className="flex-1 h-11 flex items-center justify-center bg-white text-gray-900 rounded-full font-bold gap-2 active:scale-[0.97] transition-all disabled:bg-gray-600 disabled:text-gray-400 overflow-hidden"
+            className="flex-1 h-11 flex items-center justify-center bg-white text-gray-900 rounded-full font-bold gap-2 active:scale-[0.97] transition-all disabled:bg-gray-700 disabled:text-gray-500 overflow-hidden px-2"
           >
             {isDownloading ? (
               <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></span>
             ) : (
-              <Download className="w-5 h-5 flex-shrink-0" />
+              <Download className="w-4 h-4 flex-shrink-0" />
             )}
-            <span className="truncate text-sm">{isDownloading ? '处理中' : '保存图片'}</span>
+            <span className="truncate text-[13px] leading-none uppercase tracking-wide">
+              {isDownloading ? '处理中' : '保存图片'}
+            </span>
           </button>
 
           <button 
              onClick={() => setActiveTab(activeTab === 'edit' ? 'preview' : 'edit')}
-             className="flex-shrink-0 w-11 h-11 flex items-center justify-center bg-gray-800 text-white rounded-full active:bg-gray-700 transition-colors"
+             className="flex-shrink-0 w-11 h-11 flex items-center justify-center bg-white/10 text-white rounded-full active:bg-white/20 transition-colors"
            >
              {activeTab === 'edit' ? <Eye className="w-5 h-5" /> : <Edit3 className="w-5 h-5" />}
           </button>
         </div>
-        {/* 适配全面屏底部小黑条，防止遮挡 */}
-        <div className="h-[env(safe-area-inset-bottom)] mt-2"></div>
       </div>
     </div>
   );

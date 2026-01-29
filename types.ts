@@ -1,9 +1,9 @@
 
 export enum FontFamily {
-  Serif = 'font-serif',
-  Sans = 'font-sans',
-  Handwritten = 'font-handwritten',
-  Calligraphy = 'font-calligraphy'
+  Serif = 'serif',
+  Sans = 'sans',
+  Handwritten = 'handwritten',
+  Calligraphy = 'calligraphy'
 }
 
 export enum ThemeType {
@@ -16,7 +16,7 @@ export enum ThemeType {
 export interface NoteStyle {
   font: FontFamily;
   theme: ThemeType;
-  fontSize: number; // 1-12: 更精细的缩放，解决手机端字体偏大的问题
+  fontSize: number;
   alignment: 'left' | 'center' | 'justify';
   showDate: boolean;
   showSignature: boolean;
@@ -24,10 +24,10 @@ export interface NoteStyle {
 }
 
 export const fontMap: Record<FontFamily, string> = {
-  [FontFamily.Serif]: "font-['Noto_Serif_SC']",
-  [FontFamily.Sans]: "font-['Noto_Sans_SC']",
-  [FontFamily.Handwritten]: "font-['Ma_Shan_Zheng']",
-  [FontFamily.Calligraphy]: "font-['Zhi_Mang_Xing']"
+  [FontFamily.Serif]: "font-serif-sc",
+  [FontFamily.Sans]: "font-sans-sc",
+  [FontFamily.Handwritten]: "font-handwritten-sc",
+  [FontFamily.Calligraphy]: "font-calligraphy-sc"
 };
 
 export const themeMap: Record<ThemeType, { container: string, text: string, accent: string }> = {
