@@ -1,3 +1,4 @@
+
 export enum FontFamily {
   Serif = 'font-serif',
   Sans = 'font-sans',
@@ -15,14 +16,13 @@ export enum ThemeType {
 export interface NoteStyle {
   font: FontFamily;
   theme: ThemeType;
-  fontSize: number; // 1: Small, 2: Medium, 3: Large
+  fontSize: number; // 1-12: 更精细的缩放，解决手机端字体偏大的问题
   alignment: 'left' | 'center' | 'justify';
   showDate: boolean;
   showSignature: boolean;
   signatureText: string;
 }
 
-// Helper to map enum to actual CSS classes
 export const fontMap: Record<FontFamily, string> = {
   [FontFamily.Serif]: "font-['Noto_Serif_SC']",
   [FontFamily.Sans]: "font-['Noto_Sans_SC']",
@@ -37,8 +37,8 @@ export const themeMap: Record<ThemeType, { container: string, text: string, acce
     accent: 'text-gray-400'
   },
   [ThemeType.WarmIvory]: {
-    container: 'bg-[#F9F5E8]', // Warm paper color
-    text: 'text-[#4A4036]', // Dark brown/sepia
+    container: 'bg-[#F9F5E8]',
+    text: 'text-[#4A4036]',
     accent: 'text-[#8C7E72]'
   },
   [ThemeType.SoftGray]: {

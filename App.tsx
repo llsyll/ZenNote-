@@ -1,11 +1,10 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { toPng } from 'html-to-image';
-import { Download, Sparkles, Eraser, AlertCircle, Eye, Edit3, CheckCircle2 } from 'lucide-react';
+import { Download, Eraser, Eye, Edit3, CheckCircle2 } from 'lucide-react';
 import NoteCard from './components/NoteCard';
 import EditorControls from './components/EditorControls';
 import { FontFamily, NoteStyle, ThemeType } from './types';
-import { polishText, summarizeToTitle } from './services/geminiService';
 
 const App: React.FC = () => {
   // Content State
@@ -13,27 +12,16 @@ const App: React.FC = () => {
   const [title, setTitle] = useState<string>("");
   
   // UI State
-  const [isPolishing, setIsPolishing] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [hasKey, setHasKey] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
   const cardRef = useRef<HTMLDivElement>(null);
-
-  // Check for API Key on mount
-  useEffect(() => {
-    const key = typeof process !== 'undefined' ? process.env.API_KEY : null;
-    if (!key) {
-      setHasKey(false);
-      console.warn("API_KEY environment variable is not set.");
-    }
-  }, []);
 
   // Style State
   const [style, setStyle] = useState<NoteStyle>({
     font: FontFamily.Serif,
     theme: ThemeType.WarmIvory,
-    fontSize: 2,
+    fontSize: 4, // 默认档位，微调后的 4 相当于原来的标准大小
     alignment: 'left',
     showDate: true,
     showSignature: true,
@@ -50,11 +38,10 @@ const App: React.FC = () => {
     setIsDownloading(true);
     
     try {
-      // Give UI time to hide any focus rings
       await new Promise(resolve => setTimeout(resolve, 350));
       
       const dataUrl = await toPng(cardRef.current, { 
-        pixelRatio: 2.5, // High quality but balanced for mobile memory
+        pixelRatio: 2.5,
         cacheBust: true,
         skipFonts: false,
       });
@@ -66,42 +53,20 @@ const App: React.FC = () => {
       link.click();
       document.body.removeChild(link);
       
-      // Success feedback
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (err) {
       console.error('Could not generate image', err);
-      alert('图片生成失败。如果是在微信中，请尝试在浏览器打开或长按预览图。');
+      alert('图片生成失败，请稍后重试。');
     } finally {
       setIsDownloading(false);
     }
   }, []);
 
-  const handleAiPolish = async () => {
-    if (!content.trim()) return;
-    if (!hasKey) {
-      alert("请先在环境变量中配置 API_KEY");
-      return;
-    }
-    setIsPolishing(true);
-    try {
-      const [polished, generatedTitle] = await Promise.all([
-        polishText(content),
-        !title ? summarizeToTitle(content) : Promise.resolve(title)
-      ]);
-      setContent(polished);
-      if (!title) setTitle(generatedTitle);
-    } catch (error) {
-      alert("AI 服务暂时不可用");
-    } finally {
-      setIsPolishing(false);
-    }
-  };
-
   return (
     <div className="min-h-screen flex flex-col md:flex-row font-sans bg-stone-100 overflow-hidden select-none">
       
-      {/* Mobile Header Tab Switcher (Safe area inset for notched phones) */}
+      {/* Mobile Header Tab Switcher */}
       <div className="md:hidden flex bg-white/90 backdrop-blur-md border-b border-gray-200 sticky top-0 z-30 pt-[env(safe-area-inset-top)]">
         <button 
           onClick={() => setActiveTab('edit')}
@@ -137,25 +102,15 @@ const App: React.FC = () => {
           <textarea 
             value={content}
             onChange={handleContentChange}
-            placeholder="在此输入正文..."
+            placeholder="在此输入正文内容..."
             className="w-full min-h-[300px] md:flex-grow resize-none bg-white border-none rounded-2xl p-5 text-base leading-relaxed focus:ring-2 focus:ring-gray-200 transition-all shadow-sm"
           />
-          
-          {content.length > 2 && (
-            <button
-              onClick={handleAiPolish}
-              disabled={isPolishing}
-              className="absolute bottom-4 right-4 bg-gray-900 text-white px-5 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 shadow-xl active:scale-95 disabled:opacity-50 transition-transform"
-            >
-              {isPolishing ? <span className="animate-pulse">润色中...</span> : <><Sparkles className="w-4 h-4 text-yellow-300" /> AI 润色</>}
-            </button>
-          )}
         </div>
 
         <EditorControls style={style} onChange={setStyle} />
         
         {/* Safe area padding for mobile */}
-        <div className="h-32 md:hidden"></div>
+        <div className="h-40 md:hidden"></div>
       </div>
 
       {/* Right Side: Live Preview */}
@@ -191,26 +146,33 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Mobile Floating Action Bar */}
-      <div className="md:hidden fixed bottom-8 left-1/2 -translate-x-1/2 flex gap-4 px-6 py-4 bg-white/70 backdrop-blur-2xl border border-white/30 rounded-full shadow-[0_15px_35px_rgba(0,0,0,0.15)] z-50 ring-1 ring-black/5 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+      {/* Mobile Floating Action Bar - 修复按钮挤压变形 */}
+      <div className="md:hidden fixed bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 px-6 py-4 bg-white/80 backdrop-blur-2xl border border-white/30 rounded-full shadow-[0_15px_35px_rgba(0,0,0,0.2)] z-50 ring-1 ring-black/5 pb-[calc(1rem+env(safe-area-inset-bottom))] w-[90%] max-w-[360px]">
         <button 
           onClick={() => {setContent(''); setTitle(''); setActiveTab('edit')}}
-          className="w-12 h-12 flex items-center justify-center bg-gray-100 text-gray-400 rounded-full active:bg-gray-200"
+          className="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-gray-100 text-gray-400 rounded-full active:bg-gray-200"
         >
           <Eraser className="w-5 h-5" />
         </button>
+        
+        {/* 使用 flex-1 和 min-w-0 确保文字不强制换行 */}
         <button 
           onClick={handleDownload}
           disabled={isDownloading || !content}
-          className="px-10 h-12 flex items-center justify-center bg-gray-900 text-white rounded-full font-bold shadow-lg shadow-gray-900/30 gap-2 active:scale-90 transition-transform disabled:bg-gray-300"
+          className="flex-1 min-w-0 h-12 flex items-center justify-center bg-gray-900 text-white rounded-full font-bold shadow-lg shadow-gray-900/30 gap-2 active:scale-95 transition-transform disabled:bg-gray-300 whitespace-nowrap overflow-hidden px-4"
         >
-          {isDownloading ? <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span> : <Download className="w-5 h-5" />}
-          <span>{isDownloading ? '生成中' : '保存图片'}</span>
+          {isDownloading ? (
+            <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
+          ) : (
+            <Download className="w-5 h-5 flex-shrink-0" />
+          )}
+          <span className="truncate">{isDownloading ? '生成中' : '保存图片'}</span>
         </button>
+
         {activeTab === 'edit' && content && (
            <button 
              onClick={() => setActiveTab('preview')}
-             className="w-12 h-12 flex items-center justify-center bg-gray-900 text-white rounded-full active:scale-90"
+             className="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-gray-900 text-white rounded-full active:scale-90"
            >
              <Eye className="w-5 h-5" />
            </button>

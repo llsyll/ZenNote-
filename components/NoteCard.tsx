@@ -13,12 +13,24 @@ const NoteCard = forwardRef<HTMLDivElement, NoteCardProps>(({ content, title, st
   const currentTheme = themeMap[style.theme];
   const currentFont = fontMap[style.font];
   
-  const fontSizeClass = 
-    style.fontSize === 1 ? 'text-base' :
-    style.fontSize === 2 ? 'text-lg' :
-    'text-xl';
+  // 映射 12 档字体大小，提供极致微调
+  const fontSizeMap: Record<number, string> = {
+    1: 'text-[10px]',
+    2: 'text-[12px]',
+    3: 'text-[14px]',
+    4: 'text-[16px]',
+    5: 'text-[18px]',
+    6: 'text-[20px]',
+    7: 'text-[22px]',
+    8: 'text-[24px]',
+    9: 'text-[28px]',
+    10: 'text-[32px]',
+    11: 'text-[36px]',
+    12: 'text-[42px]',
+  };
 
-  const baseLeading = style.fontSize === 1 ? 'leading-relaxed' : 'leading-loose';
+  const fontSizeClass = fontSizeMap[style.fontSize] || 'text-[16px]';
+  const baseLeading = style.fontSize <= 5 ? 'leading-relaxed' : 'leading-snug';
 
   const alignmentClass = 
     style.alignment === 'center' ? 'text-center' :
@@ -38,12 +50,12 @@ const NoteCard = forwardRef<HTMLDivElement, NoteCardProps>(({ content, title, st
   return (
     <div 
       ref={ref}
-      className={`w-full max-w-[480px] mx-auto min-h-[600px] p-6 md:p-12 flex flex-col shadow-sm relative overflow-hidden transition-colors duration-300 ${currentTheme.container} ${currentFont}`}
+      className={`w-full max-w-[480px] mx-auto min-h-[600px] p-8 md:p-12 flex flex-col shadow-sm relative overflow-hidden transition-colors duration-300 ${currentTheme.container} ${currentFont}`}
     >
       <div className={`w-8 h-1 mb-8 opacity-20 rounded-full ${style.alignment === 'center' ? 'mx-auto' : ''} bg-current ${currentTheme.text}`}></div>
 
       {style.showDate && (
-        <div className={`text-xs tracking-widest uppercase mb-8 opacity-50 ${currentTheme.text} ${style.alignment === 'center' ? 'text-center' : ''}`}>
+        <div className={`text-[10px] tracking-widest uppercase mb-6 opacity-50 ${currentTheme.text} ${style.alignment === 'center' ? 'text-center' : ''}`}>
           {dateStr.replace(/\//g, '.')}
         </div>
       )}
@@ -78,14 +90,14 @@ const NoteCard = forwardRef<HTMLDivElement, NoteCardProps>(({ content, title, st
             {processedContent}
           </ReactMarkdown>
         ) : (
-          <div className="whitespace-pre-wrap opacity-40">在此处输入文字或 Markdown 内容...</div>
+          <div className="whitespace-pre-wrap opacity-40">在此处输入文字或内容...</div>
         )}
       </div>
 
       {style.showSignature && (
         <div className={`mt-12 pt-8 border-t border-current border-opacity-10 flex flex-col gap-2 ${currentTheme.accent}`}>
            <div className={`flex items-center gap-2 ${style.alignment === 'center' ? 'justify-center' : 'justify-end'}`}>
-             <span className="text-sm tracking-widest font-medium opacity-70">
+             <span className="text-xs tracking-widest font-medium opacity-70">
                {style.signatureText || "ZenNote"}
              </span>
            </div>

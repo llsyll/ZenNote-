@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { FontFamily, ThemeType, NoteStyle } from '../types';
 import { 
@@ -24,14 +25,15 @@ const EditorControls: React.FC<EditorControlsProps> = ({ style, onChange }) => {
   };
 
   return (
-    <div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-2xl p-4 flex flex-col gap-6 shadow-sm">
+    <div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-2xl p-4 flex flex-col gap-6 shadow-sm overflow-visible">
       
       {/* Theme Selection */}
-      <div className="space-y-3">
+      <div className="space-y-3 overflow-visible">
         <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-2">
           <Palette className="w-3 h-3" /> 主题风格
         </label>
-        <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+        {/* 修复 ring 遮挡：增加 py-2 确保选中的光晕不被溢出隐藏 */}
+        <div className="flex gap-4 overflow-x-auto py-2 px-1 no-scrollbar scroll-smooth overflow-visible">
           {[
             { id: ThemeType.PureWhite, bg: 'bg-white border-gray-200', label: '纯白' },
             { id: ThemeType.WarmIvory, bg: 'bg-[#F9F5E8] border-[#E6DCC3]', label: '暖宣' },
@@ -41,7 +43,7 @@ const EditorControls: React.FC<EditorControlsProps> = ({ style, onChange }) => {
             <button
               key={theme.id}
               onClick={() => updateStyle('theme', theme.id)}
-              className={`w-10 h-10 rounded-full border-2 flex-shrink-0 transition-all hover:scale-110 ${theme.bg} ${style.theme === theme.id ? 'ring-2 ring-offset-2 ring-gray-400 scale-110' : ''}`}
+              className={`w-10 h-10 rounded-full border-2 flex-shrink-0 transition-all hover:scale-110 active:scale-95 ${theme.bg} ${style.theme === theme.id ? 'ring-4 ring-offset-2 ring-gray-400 scale-105' : ''}`}
               title={theme.label}
             />
           ))}
@@ -55,15 +57,15 @@ const EditorControls: React.FC<EditorControlsProps> = ({ style, onChange }) => {
         </label>
         <div className="grid grid-cols-2 gap-2">
           {[
-            { id: FontFamily.Serif, name: '宋体 (Serif)', class: 'font-serif' },
-            { id: FontFamily.Sans, name: '黑体 (Sans)', class: 'font-sans' },
-            { id: FontFamily.Handwritten, name: '马善政 (手写)', class: "font-['Ma_Shan_Zheng']" },
-            { id: FontFamily.Calligraphy, name: '志莽行 (行书)', class: "font-['Zhi_Mang_Xing']" },
+            { id: FontFamily.Serif, name: '宋体', class: 'font-serif' },
+            { id: FontFamily.Sans, name: '黑体', class: 'font-sans' },
+            { id: FontFamily.Handwritten, name: '手写体', class: "font-['Ma_Shan_Zheng']" },
+            { id: FontFamily.Calligraphy, name: '行书', class: "font-['Zhi_Mang_Xing']" },
           ].map((font) => (
             <button
               key={font.id}
               onClick={() => updateStyle('font', font.id)}
-              className={`px-3 py-2 text-sm rounded-lg border transition-all text-left ${font.class}
+              className={`px-3 py-2.5 text-sm rounded-lg border transition-all text-left truncate ${font.class}
                 ${style.font === font.id 
                   ? 'bg-gray-900 text-white border-gray-900' 
                   : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
@@ -81,22 +83,25 @@ const EditorControls: React.FC<EditorControlsProps> = ({ style, onChange }) => {
           <AlignLeft className="w-3 h-3" /> 排版细节
         </label>
         <div className="flex items-center justify-between bg-gray-50 rounded-lg p-2 border border-gray-100">
-           {/* Font Size */}
-           <div className="flex items-center gap-1 border-r border-gray-200 pr-2 mr-2">
+           {/* Font Size (Expanded to 12 Levels) */}
+           <div className="flex items-center gap-2 border-r border-gray-200 pr-3 mr-1">
               <button 
                 onClick={() => updateStyle('fontSize', Math.max(1, style.fontSize - 1))}
                 disabled={style.fontSize <= 1}
-                className="p-1.5 hover:bg-gray-200 rounded-md disabled:opacity-30"
+                className="p-1.5 hover:bg-gray-200 rounded-md disabled:opacity-30 active:scale-90"
               >
-                <Minus className="w-3 h-3" />
+                <Minus className="w-4 h-4" />
               </button>
-              <span className="text-xs w-4 text-center font-medium">{style.fontSize}</span>
+              <div className="flex flex-col items-center min-w-[2.5rem]">
+                <span className="text-xs font-bold leading-none">{style.fontSize}</span>
+                <span className="text-[8px] opacity-40 uppercase">Size</span>
+              </div>
               <button 
-                 onClick={() => updateStyle('fontSize', Math.min(3, style.fontSize + 1))}
-                 disabled={style.fontSize >= 3}
-                 className="p-1.5 hover:bg-gray-200 rounded-md disabled:opacity-30"
+                 onClick={() => updateStyle('fontSize', Math.min(12, style.fontSize + 1))}
+                 disabled={style.fontSize >= 12}
+                 className="p-1.5 hover:bg-gray-200 rounded-md disabled:opacity-30 active:scale-90"
               >
-                <Plus className="w-3 h-3" />
+                <Plus className="w-4 h-4" />
               </button>
            </div>
 
@@ -110,7 +115,7 @@ const EditorControls: React.FC<EditorControlsProps> = ({ style, onChange }) => {
                 <button
                   key={align.id}
                   onClick={() => updateStyle('alignment', align.id)}
-                  className={`p-1.5 rounded-md transition-colors ${style.alignment === align.id ? 'bg-white shadow-sm text-black' : 'text-gray-400 hover:text-gray-600'}`}
+                  className={`p-2.5 rounded-md transition-colors ${style.alignment === align.id ? 'bg-white shadow-sm text-black border border-gray-100' : 'text-gray-400 hover:text-gray-600'}`}
                 >
                   <align.icon className="w-4 h-4" />
                 </button>
@@ -120,7 +125,7 @@ const EditorControls: React.FC<EditorControlsProps> = ({ style, onChange }) => {
       </div>
 
       {/* Toggles */}
-      <div className="space-y-3 pt-2 border-t border-gray-100">
+      <div className="space-y-3 pt-4 border-t border-gray-100">
         <div className="flex items-center justify-between">
           <label className="text-xs font-medium text-gray-600 flex items-center gap-2">
             <Calendar className="w-3 h-3" /> 显示日期
@@ -151,7 +156,7 @@ const EditorControls: React.FC<EditorControlsProps> = ({ style, onChange }) => {
             value={style.signatureText}
             onChange={(e) => updateStyle('signatureText', e.target.value)}
             placeholder="署名内容"
-            className="w-full mt-2 p-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 bg-gray-50"
+            className="w-full mt-2 p-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200 bg-gray-50/50"
           />
         )}
       </div>
