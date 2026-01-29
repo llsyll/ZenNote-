@@ -5,7 +5,6 @@ import { Download, Eraser, Eye, Edit3, CheckCircle2 } from 'lucide-react';
 import NoteCard from './components/NoteCard';
 import EditorControls from './components/EditorControls';
 import { FontFamily, NoteStyle, ThemeType } from './types';
-import './src/styles.css';
 
 const App: React.FC = () => {
   // Content State
@@ -20,7 +19,8 @@ const App: React.FC = () => {
 
   // Style State
   const [style, setStyle] = useState<NoteStyle>({
-    font: FontFamily.Serif,
+    // Fix: Change FontFamily.Serif to FontFamily.NotoSerif as Serif doesn't exist in types.ts
+    font: FontFamily.NotoSerif,
     theme: ThemeType.WarmIvory,
     fontSize: 4, 
     alignment: 'left',

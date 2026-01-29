@@ -1,9 +1,9 @@
 
 export enum FontFamily {
-  Serif = 'serif',
-  Sans = 'sans',
-  Heiti = 'heiti',
-  Songti = 'songti'
+  NotoSans = 'noto-sans',
+  NotoSerif = 'noto-serif',
+  WenKai = 'wenkai',
+  WenKaiMono = 'wenkai-mono'
 }
 
 export enum ThemeType {
@@ -24,10 +24,10 @@ export interface NoteStyle {
 }
 
 export const fontMap: Record<FontFamily, string> = {
-  [FontFamily.Serif]: "font-serif-sc",
-  [FontFamily.Sans]: "font-sans-sc",
-  [FontFamily.Heiti]: "font-heiti-sc",
-  [FontFamily.Songti]: "font-songti-sc"
+  [FontFamily.NotoSans]: "font-noto-sans",
+  [FontFamily.NotoSerif]: "font-noto-serif",
+  [FontFamily.WenKai]: "font-lxgw-wenkai",
+  [FontFamily.WenKaiMono]: "font-lxgw-mono"
 };
 
 export const themeMap: Record<ThemeType, { container: string, text: string, accent: string }> = {

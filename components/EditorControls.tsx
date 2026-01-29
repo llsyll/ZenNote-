@@ -56,10 +56,10 @@ const EditorControls: React.FC<EditorControlsProps> = ({ style, onChange }) => {
         </label>
         <div className="grid grid-cols-2 gap-2">
           {[
-            { id: FontFamily.Serif, name: '宋体' },
-            { id: FontFamily.Sans, name: '无衬线' },
-            { id: FontFamily.Heiti, name: '黑体' },
-            { id: FontFamily.Songti, name: '仿宋' },
+            { id: FontFamily.NotoSans, name: '思源黑体' },
+            { id: FontFamily.NotoSerif, name: '思源宋体' },
+            { id: FontFamily.WenKai, name: '霞鹜文楷' },
+            { id: FontFamily.WenKaiMono, name: '文楷等宽' },
           ].map((font) => (
             <button
               key={font.id}
