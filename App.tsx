@@ -1,7 +1,7 @@
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { toPng } from 'html-to-image';
-import { Download, Eraser, Eye, Edit3, CheckCircle2 } from 'lucide-react';
+import React, { useState, useRef, useCallback } from 'react';
+import { toBlob } from 'html-to-image';
+import { Download, Eraser, Eye, Edit3, CheckCircle2, AlertTriangle } from 'lucide-react';
 import NoteCard from './components/NoteCard';
 import EditorControls from './components/EditorControls';
 import { FontFamily, NoteStyle, ThemeType } from './types';
@@ -19,7 +19,6 @@ const App: React.FC = () => {
 
   // Style State
   const [style, setStyle] = useState<NoteStyle>({
-    // Fix: Change FontFamily.Serif to FontFamily.NotoSerif as Serif doesn't exist in types.ts
     font: FontFamily.NotoSerif,
     theme: ThemeType.WarmIvory,
     fontSize: 4, 
@@ -29,53 +28,64 @@ const App: React.FC = () => {
     signatureText: 'By ZenNote',
   });
 
-  // Handlers
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setContent(e.target.value);
-  };
-
   const handleDownload = useCallback(async () => {
     if (!cardRef.current) return;
     
-    // 简单的长度校验，防止极端情况
-    if (content.length > 5000) {
-      if (!confirm('内容过长可能会导致生成失败，是否继续？')) return;
+    // 简单的长度/内存风险校验
+    if (content.length > 3000) {
+      if (!confirm('内容较长，在某些手机上可能会由于内存限制导致生成失败。是否继续？')) return;
     }
 
     setIsDownloading(true);
     
     try {
-      // 增加延迟确保 UI 完全静止
-      await new Promise(resolve => setTimeout(resolve, 600));
+      // 等待 DOM 稳定
+      await new Promise(resolve => setTimeout(resolve, 500));
       
-      // 优化截图参数以减少内存占用
-      const dataUrl = await toPng(cardRef.current, { 
-        pixelRatio: 2.0, // 从 2.5 降至 2.0，大幅减少内存压力
-        cacheBust: true,
-        skipFonts: false,
-        // 过滤掉背景噪声层，因为 SVG 滤镜在截图时非常吃内存且容易崩溃
+      /**
+       * 核心优化策略：
+       * 1. 使用 toBlob 而非 toPng：Blob 直接存储二进制数据，不涉及 Base64 转换，极大减少内存峰值。
+       * 2. 切换至 JPEG：支持 quality 压缩，对内存极其友好。
+       * 3. pixelRatio 保持在 2.0：兼顾清晰度与内存。
+       */
+      const blob = await toBlob(cardRef.current, { 
+        quality: 0.9,
+        pixelRatio: 2.0,
+        cacheBust: false,
+        backgroundColor: style.theme === ThemeType.DarkMode ? '#1c1c1e' : 
+                        style.theme === ThemeType.WarmIvory ? '#F9F5E8' : 
+                        style.theme === ThemeType.SoftGray ? '#F3F4F6' : '#FFFFFF',
         filter: (node) => {
-          const classList = (node as HTMLElement).classList;
-          return !classList?.contains('pointer-events-none') || !classList?.contains('opacity-[0.03]');
+          const el = node as HTMLElement;
+          // 彻底排除噪点图层，这是最消耗截图计算资源的
+          if (el.classList?.contains('noise-layer')) return false;
+          return true;
         }
       });
-      
+
+      if (!blob) throw new Error('Blob generation failed');
+
+      // 创建下载链接
+      const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.download = `zennote-${Date.now()}.png`;
-      link.href = dataUrl;
+      link.download = `ZenNote-${Date.now()}.jpg`;
+      link.href = url;
       document.body.appendChild(link);
       link.click();
+      
+      // 清理
       document.body.removeChild(link);
+      URL.revokeObjectURL(url);
       
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (err) {
-      console.error('Image generation failed:', err);
-      alert('生成图片失败。原因可能是内容过长或设备内存不足，请尝试缩短内容或刷新页面。');
+      console.error('Save error:', err);
+      alert('保存失败。可能是因为内容过长超出了手机浏览器的内存限制。建议：1. 缩短文字内容分两次生成；2. 刷新页面后重试。');
     } finally {
       setIsDownloading(false);
     }
-  }, [content]);
+  }, [content, style.theme]);
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row font-sans bg-stone-100 overflow-hidden select-none">
@@ -115,7 +125,7 @@ const App: React.FC = () => {
            />
           <textarea 
             value={content}
-            onChange={handleContentChange}
+            onChange={(e) => setContent(e.target.value)}
             placeholder="在此输入正文内容..."
             className="w-full min-h-[350px] md:flex-grow resize-none bg-white border-none rounded-2xl p-5 text-base leading-relaxed focus:ring-2 focus:ring-gray-200 transition-all shadow-sm"
           />
@@ -143,7 +153,7 @@ const App: React.FC = () => {
               <button onClick={() => {setContent(''); setTitle('')}} className="px-6 py-3 bg-white text-gray-600 rounded-full font-bold shadow-lg hover:bg-gray-50 transition-all flex items-center gap-2"><Eraser className="w-4 h-4" /> 清空</button>
               <button onClick={handleDownload} disabled={isDownloading} className="px-8 py-3 bg-gray-900 text-white rounded-full font-bold shadow-xl hover:bg-black transition-all flex items-center gap-2 active:scale-95">
                 {isDownloading ? <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span> : <Download className="w-4 h-4" />}
-                <span>保存长图</span>
+                <span>保存高清长图</span>
               </button>
            </div>
         </div>
@@ -178,7 +188,7 @@ const App: React.FC = () => {
               <Download className="w-4 h-4 flex-shrink-0" />
             )}
             <span className="truncate text-[13px] leading-none uppercase tracking-wide">
-              {isDownloading ? '处理中' : '保存图片'}
+              {isDownloading ? '生成中...' : '保存长图'}
             </span>
           </button>
 
