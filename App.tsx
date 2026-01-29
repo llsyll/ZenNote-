@@ -5,6 +5,7 @@ import { Download, Eraser, Eye, Edit3, CheckCircle2 } from 'lucide-react';
 import NoteCard from './components/NoteCard';
 import EditorControls from './components/EditorControls';
 import { FontFamily, NoteStyle, ThemeType } from './types';
+import './src/styles.css';
 
 const App: React.FC = () => {
   // Content State

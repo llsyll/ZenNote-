@@ -2,8 +2,8 @@
 export enum FontFamily {
   Serif = 'serif',
   Sans = 'sans',
-  Handwritten = 'handwritten',
-  Calligraphy = 'calligraphy'
+  Heiti = 'heiti',
+  Songti = 'songti'
 }
 
 export enum ThemeType {
@@ -26,8 +26,8 @@ export interface NoteStyle {
 export const fontMap: Record<FontFamily, string> = {
   [FontFamily.Serif]: "font-serif-sc",
   [FontFamily.Sans]: "font-sans-sc",
-  [FontFamily.Handwritten]: "font-handwritten-sc",
-  [FontFamily.Calligraphy]: "font-calligraphy-sc"
+  [FontFamily.Heiti]: "font-heiti-sc",
+  [FontFamily.Songti]: "font-songti-sc"
 };
 
 export const themeMap: Record<ThemeType, { container: string, text: string, accent: string }> = {

@@ -57,9 +57,9 @@ const EditorControls: React.FC<EditorControlsProps> = ({ style, onChange }) => {
         <div className="grid grid-cols-2 gap-2">
           {[
             { id: FontFamily.Serif, name: '宋体' },
-            { id: FontFamily.Sans, name: '黑体' },
-            { id: FontFamily.Handwritten, name: '手写体' },
-            { id: FontFamily.Calligraphy, name: '行书' },
+            { id: FontFamily.Sans, name: '无衬线' },
+            { id: FontFamily.Heiti, name: '黑体' },
+            { id: FontFamily.Songti, name: '仿宋' },
           ].map((font) => (
             <button
               key={font.id}
