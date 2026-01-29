@@ -13,6 +13,7 @@ const NoteCard = forwardRef<HTMLDivElement, NoteCardProps>(({ content, title, st
   const currentTheme = themeMap[style.theme];
   const currentFont = fontMap[style.font];
   
+  // 映射 12 档字体大小，提供极致微调
   const fontSizeMap: Record<number, string> = {
     1: 'text-[10px]',
     2: 'text-[12px]',
@@ -49,26 +50,22 @@ const NoteCard = forwardRef<HTMLDivElement, NoteCardProps>(({ content, title, st
   return (
     <div 
       ref={ref}
-      className={`w-full max-w-[480px] mx-auto min-h-[400px] p-8 md:p-12 flex flex-col shadow-sm relative overflow-hidden transition-colors duration-300 ${currentTheme.container} ${currentFont}`}
+      className={`w-full max-w-[480px] mx-auto min-h-[600px] p-8 md:p-12 flex flex-col shadow-sm relative overflow-hidden transition-colors duration-300 ${currentTheme.container} ${currentFont}`}
     >
-      {/* Top Accent */}
       <div className={`w-8 h-1 mb-8 opacity-20 rounded-full ${style.alignment === 'center' ? 'mx-auto' : ''} bg-current ${currentTheme.text}`}></div>
 
-      {/* Date Header */}
       {style.showDate && (
         <div className={`text-[10px] tracking-widest uppercase mb-6 opacity-50 ${currentTheme.text} ${style.alignment === 'center' ? 'text-center' : ''}`}>
           {dateStr.replace(/\//g, '.')}
         </div>
       )}
 
-      {/* Title Section */}
       {title && (
         <h1 className={`text-2xl font-bold mb-8 ${currentTheme.text} ${style.alignment === 'center' ? 'text-center' : ''}`}>
           {title}
         </h1>
       )}
 
-      {/* Body Content */}
       <div className={`flex-grow ${fontSizeClass} ${baseLeading} ${alignmentClass} ${currentTheme.text}`}>
         {content ? (
           <ReactMarkdown
@@ -86,14 +83,7 @@ const NoteCard = forwardRef<HTMLDivElement, NoteCardProps>(({ content, title, st
               a: ({node, ...props}) => <a className="underline underline-offset-2 opacity-80 hover:opacity-100" {...props} />,
               hr: ({node, ...props}) => <hr className="border-t border-current opacity-20 my-8" {...props} />,
               img: ({node, ...props}) => <img className="max-w-full h-auto rounded-lg my-6 mx-auto block shadow-sm" {...props} />,
-              // 关键：显式样式注入，并根据字体类型应用伪粗体逻辑
-              strong: ({node, ...props}) => (
-                <strong 
-                  className={`font-bold opacity-100`} 
-                  style={{ fontWeight: 700 }} 
-                  {...props} 
-                />
-              ),
+              strong: ({node, ...props}) => <strong className="font-bold opacity-90" {...props} />,
               em: ({node, ...props}) => <em className="italic opacity-90" {...props} />
             }}
           >
@@ -104,7 +94,6 @@ const NoteCard = forwardRef<HTMLDivElement, NoteCardProps>(({ content, title, st
         )}
       </div>
 
-      {/* Signature Footer */}
       {style.showSignature && (
         <div className={`mt-12 pt-8 border-t border-current border-opacity-10 flex flex-col gap-2 ${currentTheme.accent}`}>
            <div className={`flex items-center gap-2 ${style.alignment === 'center' ? 'justify-center' : 'justify-end'}`}>
@@ -115,8 +104,9 @@ const NoteCard = forwardRef<HTMLDivElement, NoteCardProps>(({ content, title, st
         </div>
       )}
       
-      {/* Noise layer - 移除可能导致内存溢出的 SVG Filter 渲染 */}
-      <div className="absolute inset-0 pointer-events-none opacity-[0.03] noise-layer bg-[url('https://www.transparenttextures.com/patterns/pinstripe.png')]"></div>
+      <div className="absolute inset-0 pointer-events-none opacity-[0.03]" 
+           style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}>
+      </div>
     </div>
   );
 });

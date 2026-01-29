@@ -1,20 +1,25 @@
 
-import React, { useState, useRef, useCallback } from 'react';
-import { toBlob } from 'html-to-image';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { toPng } from 'html-to-image';
 import { Download, Eraser, Eye, Edit3, CheckCircle2 } from 'lucide-react';
 import NoteCard from './components/NoteCard';
 import EditorControls from './components/EditorControls';
 import { FontFamily, NoteStyle, ThemeType } from './types';
 
 const App: React.FC = () => {
+  // Content State
   const [content, setContent] = useState<string>("");
   const [title, setTitle] = useState<string>("");
+  
+  // UI State
   const [isDownloading, setIsDownloading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
   const cardRef = useRef<HTMLDivElement>(null);
 
+  // Style State
   const [style, setStyle] = useState<NoteStyle>({
+    // Fix: Change FontFamily.Serif to FontFamily.NotoSerif as Serif doesn't exist in types.ts
     font: FontFamily.NotoSerif,
     theme: ThemeType.WarmIvory,
     fontSize: 4, 
@@ -24,71 +29,53 @@ const App: React.FC = () => {
     signatureText: 'By ZenNote',
   });
 
+  // Handlers
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setContent(e.target.value);
+  };
+
   const handleDownload = useCallback(async () => {
     if (!cardRef.current) return;
     
+    // 简单的长度校验，防止极端情况
+    if (content.length > 5000) {
+      if (!confirm('内容过长可能会导致生成失败，是否继续？')) return;
+    }
+
     setIsDownloading(true);
     
     try {
-      // 1. 获取目标元素实际高度
-      const rect = cardRef.current.getBoundingClientRect();
-      const height = rect.height;
-
-      /**
-       * 2. 核心崩溃解决方案：动态分辨率策略
-       * 移动端 Canvas 限制非常死，我们必须根据高度动态调整 pixelRatio。
-       * 阈值设定参考：
-       * - 高度 < 2500px (普通短文): 2.0x (高清)
-       * - 高度 < 5000px (长文): 1.5x (兼顾)
-       * - 高度 >= 5000px (极长文): 1.0x (保命模式)
-       */
-      let smartPixelRatio = 2.0;
-      if (height > 5000) {
-        smartPixelRatio = 1.0;
-      } else if (height > 2500) {
-        smartPixelRatio = 1.5;
-      }
-
-      // 给 UI 渲染一点点喘息时间
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      const blob = await toBlob(cardRef.current, { 
-        quality: 0.85, // 稍微降低质量以进一步减轻内存
-        pixelRatio: smartPixelRatio,
-        cacheBust: false,
-        backgroundColor: style.theme === ThemeType.DarkMode ? '#1c1c1e' : 
-                        style.theme === ThemeType.WarmIvory ? '#F9F5E8' : 
-                        style.theme === ThemeType.SoftGray ? '#F3F4F6' : '#FFFFFF',
+      // 增加延迟确保 UI 完全静止
+      await new Promise(resolve => setTimeout(resolve, 600));
+      
+      // 优化截图参数以减少内存占用
+      const dataUrl = await toPng(cardRef.current, { 
+        pixelRatio: 2.0, // 从 2.5 降至 2.0，大幅减少内存压力
+        cacheBust: true,
+        skipFonts: false,
+        // 过滤掉背景噪声层，因为 SVG 滤镜在截图时非常吃内存且容易崩溃
         filter: (node) => {
-          const el = node as HTMLElement;
-          // 彻底干掉所有可能导致截图引擎内存溢出的滤镜和复杂层
-          if (el.classList?.contains('noise-layer')) return false;
-          if (el.tagName === 'svg' && el.closest('.noise-layer')) return false;
-          return true;
+          const classList = (node as HTMLElement).classList;
+          return !classList?.contains('pointer-events-none') || !classList?.contains('opacity-[0.03]');
         }
       });
-
-      if (!blob) throw new Error('Blob generation failed');
-
-      const url = URL.createObjectURL(blob);
+      
       const link = document.createElement('a');
-      link.download = `ZenNote-${Date.now()}.jpg`;
-      link.href = url;
+      link.download = `zennote-${Date.now()}.png`;
+      link.href = dataUrl;
       document.body.appendChild(link);
       link.click();
-      
       document.body.removeChild(link);
-      setTimeout(() => URL.revokeObjectURL(url), 100);
       
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (err) {
-      console.error('Save error:', err);
-      alert('保存失败。可能是文字内容过长超出了手机硬件极限。建议：\n1. 尝试减少文字长度；\n2. 调小排版中的字体大小。');
+      console.error('Image generation failed:', err);
+      alert('生成图片失败。原因可能是内容过长或设备内存不足，请尝试缩短内容或刷新页面。');
     } finally {
       setIsDownloading(false);
     }
-  }, [style.theme]);
+  }, [content]);
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row font-sans bg-stone-100 overflow-hidden select-none">
@@ -128,7 +115,7 @@ const App: React.FC = () => {
            />
           <textarea 
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={handleContentChange}
             placeholder="在此输入正文内容..."
             className="w-full min-h-[350px] md:flex-grow resize-none bg-white border-none rounded-2xl p-5 text-base leading-relaxed focus:ring-2 focus:ring-gray-200 transition-all shadow-sm"
           />
@@ -138,7 +125,7 @@ const App: React.FC = () => {
       </div>
 
       {/* Right Side: Live Preview */}
-      <div className={`w-full md:w-1/2 lg:w-7/12 bg-[#d6d6d6] ${activeTab === 'edit' ? 'hidden md:flex' : 'flex'} min-h-[calc(100vh-100px)] md:min-h-screen p-4 md:p-6 flex flex-col items-center justify-start md:justify-center relative overflow-y-auto pb-48 md:pb-12`}>
+      <div className={`w-full md:w-1/2 lg:w-7/12 bg-[#d6d6d6] ${activeTab === 'edit' ? 'hidden md:flex' : 'flex'} min-h-[calc(100vh-100px)] md:min-h-screen p-4 md:p-12 flex-col items-center justify-start md:justify-center relative overflow-y-auto pb-48 md:pb-12`}>
         <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
 
         <div className="relative w-full max-w-[420px] flex flex-col gap-6 z-0">
@@ -191,7 +178,7 @@ const App: React.FC = () => {
               <Download className="w-4 h-4 flex-shrink-0" />
             )}
             <span className="truncate text-[13px] leading-none uppercase tracking-wide">
-              {isDownloading ? '生成中...' : '保存长图'}
+              {isDownloading ? '处理中' : '保存图片'}
             </span>
           </button>
 
