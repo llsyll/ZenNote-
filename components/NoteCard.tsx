@@ -1,3 +1,4 @@
+
 import React, { forwardRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { NoteStyle, fontMap, themeMap, ThemeType } from '../types';
@@ -31,36 +32,28 @@ const NoteCard = forwardRef<HTMLDivElement, NoteCardProps>(({ content, title, st
     weekday: 'short'
   });
 
-  // Pre-process content to replace single newlines with double space + newline
-  // This creates "soft breaks" in Markdown, preserving the user's line breaks
   const processedContent = content ? content.replace(/\n/g, '  \n') : '';
-
-  // Determine dynamic background for code blocks based on theme
   const codeBgClass = style.theme === ThemeType.DarkMode ? 'bg-white/10' : 'bg-black/5';
 
   return (
     <div 
       ref={ref}
-      className={`w-full max-w-[480px] mx-auto min-h-[600px] p-8 md:p-12 flex flex-col shadow-sm relative overflow-hidden transition-colors duration-300 ${currentTheme.container} ${currentFont}`}
+      className={`w-full max-w-[480px] mx-auto min-h-[600px] p-6 md:p-12 flex flex-col shadow-sm relative overflow-hidden transition-colors duration-300 ${currentTheme.container} ${currentFont}`}
     >
-      {/* Decorative Top Element (Minimalist) */}
       <div className={`w-8 h-1 mb-8 opacity-20 rounded-full ${style.alignment === 'center' ? 'mx-auto' : ''} bg-current ${currentTheme.text}`}></div>
 
-      {/* Header / Date */}
       {style.showDate && (
         <div className={`text-xs tracking-widest uppercase mb-8 opacity-50 ${currentTheme.text} ${style.alignment === 'center' ? 'text-center' : ''}`}>
           {dateStr.replace(/\//g, '.')}
         </div>
       )}
 
-      {/* Optional Title */}
       {title && (
         <h1 className={`text-2xl font-bold mb-8 ${currentTheme.text} ${style.alignment === 'center' ? 'text-center' : ''}`}>
           {title}
         </h1>
       )}
 
-      {/* Main Content */}
       <div className={`flex-grow ${fontSizeClass} ${baseLeading} ${alignmentClass} ${currentTheme.text}`}>
         {content ? (
           <ReactMarkdown
@@ -73,9 +66,7 @@ const NoteCard = forwardRef<HTMLDivElement, NoteCardProps>(({ content, title, st
               ol: ({node, ...props}) => <ol className={`list-decimal ${style.alignment === 'center' ? 'list-inside' : 'list-outside ml-4'} mb-4 space-y-1`} {...props} />,
               li: ({node, ...props}) => <li className="pl-1" {...props} />,
               blockquote: ({node, ...props}) => <blockquote className="border-l-2 border-current pl-4 italic my-6 opacity-75" {...props} />,
-              code: ({node, ...props}) => {
-                return <code className={`font-mono text-[0.85em] rounded px-1 py-0.5 ${codeBgClass}`} {...props} />;
-              },
+              code: ({node, ...props}) => <code className={`font-mono text-[0.85em] rounded px-1 py-0.5 ${codeBgClass}`} {...props} />,
               pre: ({node, ...props}) => <pre className={`font-mono text-sm p-4 rounded-lg overflow-x-auto mb-6 ${codeBgClass}`} {...props} />,
               a: ({node, ...props}) => <a className="underline underline-offset-2 opacity-80 hover:opacity-100" {...props} />,
               hr: ({node, ...props}) => <hr className="border-t border-current opacity-20 my-8" {...props} />,
@@ -91,7 +82,6 @@ const NoteCard = forwardRef<HTMLDivElement, NoteCardProps>(({ content, title, st
         )}
       </div>
 
-      {/* Footer / Signature */}
       {style.showSignature && (
         <div className={`mt-12 pt-8 border-t border-current border-opacity-10 flex flex-col gap-2 ${currentTheme.accent}`}>
            <div className={`flex items-center gap-2 ${style.alignment === 'center' ? 'justify-center' : 'justify-end'}`}>
@@ -102,7 +92,6 @@ const NoteCard = forwardRef<HTMLDivElement, NoteCardProps>(({ content, title, st
         </div>
       )}
       
-      {/* Subtle Texture/Noise overlay for paper feel */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.03]" 
            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}>
       </div>
