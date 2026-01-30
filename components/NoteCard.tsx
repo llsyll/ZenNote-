@@ -1,6 +1,7 @@
 
 import React, { forwardRef } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { NoteStyle, fontMap, themeMap, ThemeType } from '../types';
 
 interface NoteCardProps {
@@ -13,7 +14,6 @@ const NoteCard = forwardRef<HTMLDivElement, NoteCardProps>(({ content, title, st
   const currentTheme = themeMap[style.theme];
   const currentFont = fontMap[style.font];
   
-  // 映射 12 档字体大小，提供极致微调
   const fontSizeMap: Record<number, string> = {
     1: 'text-[10px]',
     2: 'text-[12px]',
@@ -46,6 +46,9 @@ const NoteCard = forwardRef<HTMLDivElement, NoteCardProps>(({ content, title, st
 
   const processedContent = content ? content.replace(/\n/g, '  \n') : '';
   const codeBgClass = style.theme === ThemeType.DarkMode ? 'bg-white/10' : 'bg-black/5';
+  const tableBorderClass = style.theme === ThemeType.DarkMode ? 'border-gray-700' : 'border-gray-300';
+  const tableHeaderBgClass = style.theme === ThemeType.DarkMode ? 'bg-white/5' : 'bg-black/[0.02]';
+  const tableTextColor = currentTheme.text; // 显式获取当前主题的文字颜色类
 
   return (
     <div 
@@ -69,6 +72,7 @@ const NoteCard = forwardRef<HTMLDivElement, NoteCardProps>(({ content, title, st
       <div className={`flex-grow ${fontSizeClass} ${baseLeading} ${alignmentClass} ${currentTheme.text}`}>
         {content ? (
           <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
             components={{
               p: ({node, ...props}) => <p className="mb-4 last:mb-0" {...props} />,
               h1: ({node, ...props}) => <h1 className="text-[1.4em] font-bold mt-8 mb-4 leading-tight border-b border-current border-opacity-10 pb-2" {...props} />,
@@ -84,7 +88,17 @@ const NoteCard = forwardRef<HTMLDivElement, NoteCardProps>(({ content, title, st
               hr: ({node, ...props}) => <hr className="border-t border-current opacity-20 my-8" {...props} />,
               img: ({node, ...props}) => <img className="max-w-full h-auto rounded-lg my-6 mx-auto block shadow-sm" {...props} />,
               strong: ({node, ...props}) => <strong className="font-bold opacity-90" {...props} />,
-              em: ({node, ...props}) => <em className="italic opacity-90" {...props} />
+              em: ({node, ...props}) => <em className="italic opacity-90" {...props} />,
+              // Table components
+              table: ({node, ...props}) => (
+                <div className="overflow-x-auto mb-8 my-4">
+                  <table className={`min-w-full border-collapse border-b ${tableBorderClass} ${tableTextColor} text-[0.9em]`} {...props} />
+                </div>
+              ),
+              thead: ({node, ...props}) => <thead className={tableHeaderBgClass} {...props} />,
+              th: ({node, ...props}) => <th className={`border ${tableBorderClass} px-4 py-2 font-bold text-left ${tableTextColor}`} {...props} />,
+              td: ({node, ...props}) => <td className={`border ${tableBorderClass} px-4 py-2 ${tableTextColor}`} {...props} />,
+              tr: ({node, ...props}) => <tr className="transition-colors" {...props} />
             }}
           >
             {processedContent}
