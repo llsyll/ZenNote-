@@ -19,10 +19,10 @@ const App: React.FC = () => {
 
   // Style State
   const [style, setStyle] = useState<NoteStyle>({
-    // Fix: Change FontFamily.Serif to FontFamily.NotoSerif as Serif doesn't exist in types.ts
     font: FontFamily.NotoSerif,
     theme: ThemeType.WarmIvory,
     fontSize: 4, 
+    tableFontSize: 3, // 默认表格字号稍小
     alignment: 'left',
     showDate: true,
     showSignature: true,
@@ -37,7 +37,6 @@ const App: React.FC = () => {
   const handleDownload = useCallback(async () => {
     if (!cardRef.current) return;
     
-    // 简单的长度校验，防止极端情况
     if (content.length > 5000) {
       if (!confirm('内容过长可能会导致生成失败，是否继续？')) return;
     }
@@ -45,15 +44,12 @@ const App: React.FC = () => {
     setIsDownloading(true);
     
     try {
-      // 增加延迟确保 UI 完全静止
       await new Promise(resolve => setTimeout(resolve, 600));
       
-      // 优化截图参数以减少内存占用
       const dataUrl = await toPng(cardRef.current, { 
-        pixelRatio: 2.0, // 从 2.5 降至 2.0，大幅减少内存压力
+        pixelRatio: 2.0,
         cacheBust: true,
         skipFonts: false,
-        // 过滤掉背景噪声层，因为 SVG 滤镜在截图时非常吃内存且容易崩溃
         filter: (node) => {
           const classList = (node as HTMLElement).classList;
           return !classList?.contains('pointer-events-none') || !classList?.contains('opacity-[0.03]');

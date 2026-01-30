@@ -17,6 +17,7 @@ export interface NoteStyle {
   font: FontFamily;
   theme: ThemeType;
   fontSize: number;
+  tableFontSize: number;
   alignment: 'left' | 'center' | 'justify';
   showDate: boolean;
   showSignature: boolean;

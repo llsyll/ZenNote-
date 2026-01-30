@@ -10,7 +10,8 @@ import {
   Minus, 
   Plus,
   Calendar,
-  PenTool
+  PenTool,
+  Table
 } from 'lucide-react';
 
 interface EditorControlsProps {
@@ -23,6 +24,10 @@ const EditorControls: React.FC<EditorControlsProps> = ({ style, onChange }) => {
   const updateStyle = (key: keyof NoteStyle, value: any) => {
     onChange({ ...style, [key]: value });
   };
+
+  // 辅助函数：确保获取有效的字号数值
+  const currentTableSize = style.tableFontSize || 3;
+  const currentFontSize = style.fontSize || 4;
 
   return (
     <div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-2xl p-4 flex flex-col gap-6 shadow-sm overflow-visible">
@@ -81,45 +86,75 @@ const EditorControls: React.FC<EditorControlsProps> = ({ style, onChange }) => {
         <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-2">
           <AlignLeft className="w-3 h-3" /> 排版细节
         </label>
-        <div className="flex items-center justify-between bg-gray-50 rounded-lg p-2 border border-gray-100">
-           {/* Font Size */}
-           <div className="flex items-center gap-2 border-r border-gray-200 pr-3 mr-1">
-              <button 
-                onClick={() => updateStyle('fontSize', Math.max(1, style.fontSize - 1))}
-                disabled={style.fontSize <= 1}
-                className="p-1.5 hover:bg-gray-200 rounded-md disabled:opacity-30 active:scale-90"
-              >
-                <Minus className="w-4 h-4" />
-              </button>
-              <div className="flex flex-col items-center min-w-[2.5rem]">
-                <span className="text-xs font-bold leading-none">{style.fontSize}</span>
-                <span className="text-[8px] opacity-40 uppercase">Size</span>
-              </div>
-              <button 
-                 onClick={() => updateStyle('fontSize', Math.min(12, style.fontSize + 1))}
-                 disabled={style.fontSize >= 12}
-                 className="p-1.5 hover:bg-gray-200 rounded-md disabled:opacity-30 active:scale-90"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-           </div>
-
-           {/* Alignment */}
-           <div className="flex items-center gap-1">
-              {[
-                { id: 'left', icon: AlignLeft },
-                { id: 'center', icon: AlignCenter },
-                { id: 'justify', icon: AlignJustify },
-              ].map((align) => (
-                <button
-                  key={align.id}
-                  onClick={() => updateStyle('alignment', align.id)}
-                  className={`p-2.5 rounded-md transition-colors ${style.alignment === align.id ? 'bg-white shadow-sm text-black border border-gray-100' : 'text-gray-400 hover:text-gray-600'}`}
+        <div className="flex flex-col gap-3">
+          {/* Main Font Size & Alignment */}
+          <div className="flex items-center justify-between bg-gray-50 rounded-lg p-2 border border-gray-100">
+             {/* Font Size */}
+             <div className="flex items-center gap-2 border-r border-gray-200 pr-3 mr-1">
+                <button 
+                  onClick={() => updateStyle('fontSize', Math.max(1, currentFontSize - 1))}
+                  disabled={currentFontSize <= 1}
+                  className="p-2 hover:bg-gray-200 rounded-md disabled:opacity-30 active:scale-90 transition-colors"
                 >
-                  <align.icon className="w-4 h-4" />
+                  <Minus className="w-4 h-4" />
                 </button>
-              ))}
-           </div>
+                <div className="flex flex-col items-center min-w-[2.5rem]">
+                  <span className="text-xs font-bold leading-none">{currentFontSize}</span>
+                  <span className="text-[8px] opacity-40 uppercase">正文</span>
+                </div>
+                <button 
+                   onClick={() => updateStyle('fontSize', Math.min(12, currentFontSize + 1))}
+                   disabled={currentFontSize >= 12}
+                   className="p-2 hover:bg-gray-200 rounded-md disabled:opacity-30 active:scale-90 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+             </div>
+
+             {/* Alignment */}
+             <div className="flex items-center gap-1">
+                {[
+                  { id: 'left', icon: AlignLeft },
+                  { id: 'center', icon: AlignCenter },
+                  { id: 'justify', icon: AlignJustify },
+                ].map((align) => (
+                  <button
+                    key={align.id}
+                    onClick={() => updateStyle('alignment', align.id)}
+                    className={`p-2.5 rounded-md transition-colors ${style.alignment === align.id ? 'bg-white shadow-sm text-black border border-gray-100' : 'text-gray-400 hover:text-gray-600'}`}
+                  >
+                    <align.icon className="w-4 h-4" />
+                  </button>
+                ))}
+             </div>
+          </div>
+
+          {/* Table Font Size Control */}
+          <div className="flex items-center justify-between bg-gray-50 rounded-lg p-2 border border-gray-100 group">
+             <div className="flex items-center gap-2 text-gray-500 pl-2">
+               <Table className="w-4 h-4" />
+               <span className="text-xs font-medium">表格字号</span>
+             </div>
+             <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => updateStyle('tableFontSize', Math.max(1, currentTableSize - 1))}
+                  disabled={currentTableSize <= 1}
+                  className="p-2 hover:bg-gray-200 rounded-md disabled:opacity-30 active:scale-90 transition-colors"
+                >
+                  <Minus className="w-4 h-4" />
+                </button>
+                <div className="flex items-center justify-center min-w-[1.5rem]">
+                  <span className="text-xs font-bold">{currentTableSize}</span>
+                </div>
+                <button 
+                   onClick={() => updateStyle('tableFontSize', Math.min(12, currentTableSize + 1))}
+                   disabled={currentTableSize >= 12}
+                   className="p-2 hover:bg-gray-200 rounded-md disabled:opacity-30 active:scale-90 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+             </div>
+          </div>
         </div>
       </div>
 
