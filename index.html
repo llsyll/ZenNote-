@@ -18,29 +18,21 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@300;400;600;700&family=LXGW+WenKai+TC&family=LXGW+WenKai+Mono+TC&display=swap" rel="stylesheet">
     <style>
-      /* 显式定义字体类，防止 html-to-image 截图时丢失 */
       .font-noto-sans { font-family: 'Noto Sans SC', sans-serif !important; }
       .font-noto-serif { font-family: 'Noto Serif SC', serif !important; }
       .font-lxgw-wenkai { font-family: 'LXGW WenKai TC', serif !important; }
       .font-lxgw-mono { font-family: 'LXGW WenKai Mono TC', monospace !important; }
 
-      /* Custom scrollbar */
-      ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #d1d5db;
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #9ca3af;
+      /* 核心修复：移动端伪粗体补强 */
+      strong, .font-bold {
+        font-weight: 700 !important;
+        text-shadow: 0.25px 0 0.1px currentColor, -0.25px 0 0.1px currentColor;
       }
       
-      /* Avoid bouncing on iOS */
+      ::-webkit-scrollbar { width: 6px; height: 6px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+      
       html, body {
         position: fixed;
         overflow: hidden;
